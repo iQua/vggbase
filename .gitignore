@@ -168,3 +168,5 @@ language/
 */visualizations
 */pretrained_models
 */results
+
+wandb/

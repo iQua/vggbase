@@ -94,6 +94,8 @@ class FieldFrozenContainer(ModelOutput):
             field_v = getattr(container, field.name)
             if torch.is_tensor(field_v):
                 field_v = field_v.cpu().detach().numpy().tolist()
+            if isinstance(field_v, list) and torch.is_tensor(field_v[0]):
+                field_v = [item.cpu().detach().numpy().tolist() for item in field_v]
             if isinstance(field_v, ModelOutput):
                 field_v = FieldFrozenContainer.get_json(field_v)
             data_dict[field.name] = field_v
