@@ -1,0 +1,9 @@
+name: bert-base
+tokenizer_name: bert-base-uncased
+model_name: bert-base-uncased
+model_path: language
+pooling_type: mean
+max_caption_length: False
+max_caption_n_phrases: False
+max_phrase_length: False
+phrase_padding_level: 2

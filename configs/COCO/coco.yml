@@ -1,0 +1,71 @@
+# include basic settings for the models and the learning process
+
+
+# dataset settings for the original dataset and the corresponding multimodal data processor
+data:
+  datasource: COCO
+  
+  data_name: COCO2017
+  data_path: data
+  # data_path: /data/sijia/data
+
+  download_train_url: http://images.cocodataset.org/zips/train2017.zip
+  download_test_url: http://images.cocodataset.org/zips/test2017.zip
+  download_val_url: http://images.cocodataset.org/zips/val2017.zip
+  download_annotation_url: http://images.cocodataset.org/annotations/annotations_trainval2017.zip
+
+
+  num_workers: 4
+
+  
+environment:
+  # always utilize the cuda if possible.
+  
+  # do not set this para to use current path as the project dir
+  #  the data is expected in the project dir, i.e., project_dir/data
+  project_dir: None 
+  # project_dir: /data/sijia
+
+  # do not set this para if the experiments are expected to be placed
+  #  in the project_dir directly.
+  # Otherwise, they are placed under project_dir/project_name
+  project_name: None 
+  
+  cuda_device_id: 0
+  
+  # fix the see for reproducible
+  seed: 15
+
+  distributed: False # True or False
+  
+  # url used to set up distributed training
+  ##  if train on multiple GPUs on a single machine, 
+  ##  then the IP is localhost.
+  dist_url: tcp://127.0.0.1:3457
+  dist_backend: nccl
+  # number of distributed processes
+  world_size: 1
+  rank: 0
+  # setting the precision for all float and int data
+  # the network executes all operators with default precision (torch.float32
+  float_precision: float32
+  int_precision: int32
+  
+  
+model:
+  model_name: None
+  grounding_model_name: None
+
+  box_header_name: None
+  seg_header_name: None
+
+  language_embedding_model_name: None
+
+train:
+  epochs: 10
+
+logging:
+  
+loss:
+
+

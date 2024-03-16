@@ -1,0 +1,156 @@
+
+data:
+  datasource_name: Flickr30K_Entities
+  datasource_path: data # no need to use the datasource data here
+
+  data_name: Flickr30K_Entities
+  data_path: data
+
+  datasource_download_address: 1ZULuuYw1xpsaVm9efyMmFX1br_lOQNhW
+
+  num_workers: 0
+  
+  # Conversion of the visual shape
+  Conversion:
+    # set the image scales
+    # image_size_scales:
+    target_size: 
+
+  # Augmentation of the visual content
+  Augmentation:
+    # Whether perform the normalization
+    is_rgb_normalized: False
+    # only support yolo5 and default currently
+    augment_style: yolo5
+
+  # Box of the visual part
+  Box:
+    # For box types, check
+    # https://albumentations.ai/docs/getting_started/bounding_boxes_augmentation/
+    # for details.
+    
+    # Bounding box format of the source dataset
+    # [x1, y1, x2, y2]
+    source_type: pascal_voc
+
+    # VGGbase utilizes the pascal_voc as 
+    # the desired box format during 
+    # the learning process
+    # [x1, y1, x2, y2]
+    work_type: pascal_voc
+
+
+environment:
+
+  # Set the project name 
+  # project_path/project_name
+  project_name: RandomVGTest
+
+  # Fix the see for reproducible
+  seed: 6
+
+model:
+
+  model_name: DirectVG
+  # The pretrained model
+  pretrained: False 
+  pretrained_models_path: experiments/pretrained_models
+  # Resume from checkpoint
+  resume_module: ""
+
+  language:
+    !include ../languages/phrase_bert_module.yml
+
+  grounding:
+    name: DataTest
+    n_proposals: 150
+
+  # num_classes
+  # setting to zero as current vg model does not need classes 
+  num_classes: 0 
+
+
+trainer:
+
+  epochs: 60
+  start_epoch: 0
+  batch_size: 1
+
+  learning_rate: 0.001
+  optimizer: AdamW
+  lr_scheduler: cosine # options: step, warmupcos
+
+  parameters:
+    optimizer:
+      lr: 0.001
+
+    lr_scheduler:
+
+  # Gradient accumulation step size
+  n_iter_grad_acc: 1
+  # Gradient clipping max norm
+  clip_max_norm: 0.1
+  # Checkpoint the model per epoch
+  checkpoint_per_epoch: 2
+
+
+logging:
+  # Path where to save, empty for no saving
+  experiment_path: experiments
+  checkpoint_path: experiments/checkpoints
+  result_path: experiments/results
+  logging_path: experiments/loggings
+  visualization_path: experiments/visualizations
+
+
+  # number of iteration to print training logs
+  tr_log_interval: &tr_log_interval 1
+  val_log_interval: 1
+
+  # visualization frequency
+  # int or 0 for no visualization
+  tr_visual_interval: 1
+  val_visual_interval: 1
+
+
+evaluation:
+
+  # criterion
+  criterion_type: general
+  
+  # matcher
+  # matcher_type:
+  matching:
+    positive_threshold: 0.7
+    negative_threshold: 0.3
+    metrics: 
+      - bbox_iou
+    metric_weights:
+      - 1
+
+  # set the losses and the coefficients
+  losses:
+    names:
+      - bbox_l1
+      - bbox_giou
+      - align_loss
+      
+    weights:
+      - 2.0
+      - 5.0
+      - 2.0
+    # pseudo_masks:
+    #   focal: 2
+    #   dice: 1
+    # Relative classification weight of the no-object class
+    eos_coef: 0.1
+
+  # set the hyper parameters for performance
+  performance:
+
+
+
+
+
+
+

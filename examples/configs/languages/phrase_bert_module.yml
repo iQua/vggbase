@@ -1,0 +1,11 @@
+
+name: phrase-bert
+tokenizer_name: whaleloops/phrase-bert
+model_name: whaleloops/phrase-bert
+model_path: language
+pooling_type: null
+max_caption_length: null
+max_caption_n_phrases: null
+max_phrase_length: null
+phrase_padding_level: 2
+features: 768

@@ -1,0 +1,202 @@
+# this file includes the hyper-parameter settings for bootstrapped transformer
+general:
+
+    # performing different running mode
+    # for different purposes
+    # - central_code_test
+    # - central
+    # - script
+    # - code_test
+    # - user
+
+    running_mode: user
+
+    file_logging: True
+
+data:
+  datasource_name: Cifar10
+  datasource_path: None
+
+  data_name: Cifar10-64
+  data_path: ~/Documents/Resource/Datasets/cifar10-64
+
+  image_size: 64
+
+environment:
+
+  # do not set this para if the experiments are expected to be placed
+  #  in the project_dir directly.
+  # Otherwise, they are placed under project_dir/project_name
+  project_name: NeurIPS
+
+  device: cpu # mps
+  # always utilize the cuda if possible.
+  # setting -1 to use the gpu with highest memory
+  cuda_device_ids: -1
+
+  # fix the see for reproducible
+  seed: 23
+
+  distributed: False # True or False
+  distributed_mode: DP # DP or DDP, only DP is supported till now
+  global_rank: 0 # this is the global rank
+  local_rank: 0 # this is the local rank
+  # url used to set up distributed training
+  dist_url: tcp://127.0.0.1:3457
+  dist_backend: nccl
+
+  # number of distributed processes
+  # in general, each gpu performs one process
+  world_size: 1
+
+model:
+  grounding_module_name: diffusion_grounding
+  language_module_name: bert
+  grounding_box_header_name: direct
+  
+  model_name: diffusion_ddmp
+  chain_steps: 1000
+
+  noise:
+    noise_variance_scheduler: linear_scheduler
+    noise_variance_schedule_setup:
+      schedule_range:
+      - 1.0E-4
+      - 0.02
+
+  diffusion_head_config:
+
+    time_embedding_config:
+      n_features: 256
+
+    time_projection_config:
+      n_features: 256
+
+    head_model_config:
+      prediction_type: noise
+      n_repeat: 2
+      return_series_outputs: True
+
+  out_weight_config:
+    p2_weighting_gamma: 0.
+    p2_weighting_k: 1
+
+  normalization_config:
+    auto_normalize: True
+
+  reverse_sampling_schema: ddpm
+
+  # whether utilize the pretrained full model,
+  # including grounding model and the grounding head
+  pretrained: None # imagenet
+  pretrained_models_dir: experiments/pretrained_models
+
+
+trainer:
+
+  epochs: 20
+  start_epoch: 0
+  batch_size: 5
+
+  optimizer: AdamW
+  lr_scheduler: cosine # options: step, warmupcos
+
+  parameters:
+    optimizer:
+      lr: 3.0E-4 # learning rate
+      weight_decay: 1.0E-4
+
+    lr_scheduler:
+      lr_backbone: 1.0E-5
+      lr_drop: 40
+      # warmup learning rate
+      warmup_lr: 1.0E-6
+
+      # lower lr bound for cyclic schedulers that hit 0 (1e-5)
+      min_lr: 1.0E-7
+      # epochs to warmup LR, if scheduler supports
+      warmup_epochs: 5
+      cooldown_epochs: 5
+      # LR decay rate
+      decay_rate: 0.1
+      lr_noise: 0.001
+      lr_noise_percent: 0.67
+      lr_noise_std: 1.0
+      lr_cycle_limit: 1
+      lr_cycle_mul: 1
+
+  # gradient accumulation step size
+  n_iter_grad_acc: 1
+
+  # gradient clipping max norm
+  clip_max_norm: 0.1
+
+  checkpoint_per_epoch: 2
+  performance_eval_per_epoch: 1
+
+
+logging:
+  # path where to save, empty for no saving
+  experiments_dir: experiments
+  checkpoints_dir: experiments/checkpoints
+  results_dir: experiments/results
+
+  # number of iteration to print training logs
+  tr_log_interval: 2
+  tr_metric_log_interval: 10
+  val_log_interval: 2
+  val_metric_log_interval: 2
+
+
+  # visualization dir
+  visualizations_dir: experiments/visualizations
+
+  # visualization frequence
+  # int or 0 for no visualization
+  tr_visual_interval: 1
+  test_visual_interval: 1
+  val_visual_interval: 1
+
+
+  loggings_dir: experiments/loggings
+
+loss:
+
+  # criterion
+  criterion_type: general
+
+  # matcher
+  # matcher_type:
+  matcher_type: aligned
+  matcher_weights:
+    # Class coefficient in the matching cost
+    cost_class: 2
+    # L1 box coefficient in the matching cost
+    cost_bbox_l1: 5
+    # giou box coefficient in the matching cost
+    cost_giou: 2
+
+  # set the losses and the coefficients
+  losses_sets:
+    bbox:
+      l1: 2
+      giou: 5
+    # pseudo_masks:
+    #   focal: 2
+    #   dice: 1
+
+  # set the hyper parameters for evaluation
+  eval_sets:
+    bbox:
+      iou_thresholds_values: Null
+      rec_thresholds_values: Null
+      max_queries_thresholds: Null
+  # Relative classification weight of the no-object class
+  eos_coef: 0.1
+
+  # auxiliary decoding loss
+  aux_loss: False
+
+  # iterative box refinement
+  with_box_refine: False
+

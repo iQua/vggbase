@@ -1,0 +1,177 @@
+
+data:
+  datasource_name: Flickr30K_Entities
+  datasource_path: data 
+
+  data_name: Flickr30K_Entities
+  data_path: data
+
+  datasource_download_address: 1ZULuuYw1xpsaVm9efyMmFX1br_lOQNhW
+
+  num_workers: 0
+
+  # Conversion of the visual shape
+  Conversion:
+    # set the image scales
+    # image_size_scales:
+    target_size: 640
+
+  # Augmentation of the visual content
+  Augmentation:
+    # Whether perform the normalization
+    is_rgb_normalized: True
+    # only support yolo5 and default currently
+    augment_style: yolo5
+
+  # Box of the visual part
+  Box:
+    # For box types, check
+    # https://albumentations.ai/docs/getting_started/bounding_boxes_augmentation/
+    # for details.
+    
+    # Bounding box format of the source dataset
+    # [x1, y1, x2, y2]
+    source_type: pascal_voc
+
+    # VGGbase utilizes the pascal_voc as 
+    # the desired box format during 
+    # the learning process
+    # [x1, y1, x2, y2]
+    work_type: pascal_voc
+
+
+environment:
+
+  # do not set this para if the experiments are expected to be placed
+  #  in the project_dir directly.
+  # Otherwise, they are placed under project_dir/project_name
+  project_name: DiffusionVG
+
+  # fix the see for reproducible
+  seed: 6
+
+model:
+  model_name: LG-DVG
+
+  # The pretrained model
+  pretrained: False 
+  pretrained_models_path: experiments/pretrained_models
+  # Resume from checkpoint
+  resume_module: ""
+  
+  language:
+    !include ../languages/phrase_bert_module.yml
+
+  rgb:
+    !include ../visuals/resnet18.yml
+
+  grounding:
+    !include ../diffusions/DiffusionVG_proposal150.yml
+
+  # num_classes
+  # setting to zero as the number of classes is not known
+  num_classes: 0 
+
+
+trainer:
+
+  epochs: 60
+  start_epoch: 0
+  batch_size: 3
+
+  learning_rate: &learning_rate 0.03
+  optimizer: AdamW
+  lr_scheduler: cosine # options: step, warmupcos
+
+  parameters:
+    optimizer:
+      lr: *learning_rate
+      weight_decay: 1.0E-4
+
+    lr_scheduler:
+      decay_epochs: 5
+      # warmup learning rate
+      warmup_lr: 1.0E-6
+      # lower lr bound for cyclic schedulers that hit 0 (1e-5)
+      min_lr: 1.0E-5
+      # epochs to warmup LR, if scheduler supports
+      warmup_epochs: 3
+      # LR decay rate
+      decay_rate: 0.1
+
+  # Gradient accumulation step size
+  n_iter_grad_acc: 1
+  # Gradient clipping max norm
+  clip_max_norm: 0.1
+  # Checkpoint the model per epoch
+  checkpoint_per_epoch: 2
+
+
+logging:
+  # Path where to save, empty for no saving
+  # When the -b is used in the command line, these settings
+  # will be ignored.
+  experiment_path: experiments
+  checkpoint_path: experiments/checkpoints
+  result_path: experiments/results
+  logging_path: experiments/loggings
+  visualization_path: experiments/visualizations
+
+
+  # number of iteration to print training logs
+  tr_log_interval: &tr_log_interval 10
+  val_log_interval: &val_log_interval 10
+
+
+evaluation:
+
+  # criterion
+  criterion_type: general
+
+
+  # box format
+  box_format: yolo
+
+  # matcher
+  # matcher_type:
+  matching:
+    positive_threshold: 0.7
+    negative_threshold: 0.3
+    metrics: 
+      - bbox_l1
+      - bbox_giou
+    metric_weights:
+      - 5
+      - 2
+
+  # set the losses and the coefficients
+  losses:
+    names:
+      - bbox_l1
+      - bbox_giou
+      - align_loss
+
+    weights:
+      - 2.0
+      - 5.0
+      - 2.0
+
+    # Relative classification weight of the no-object class
+    eos_coef: 0.1
+
+  # Set the hyper parameters for performance
+  performance:
+    box:
+      iou_thresholds_values: Null
+      rec_thresholds_values: Null
+      max_queries_thresholds: Null
+    similarity:
+      prob_threshold: 0.5
+
+  
+
+
+
+
+
+

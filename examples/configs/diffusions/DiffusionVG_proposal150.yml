@@ -1,0 +1,127 @@
+name: grounding150
+pretrained: False
+
+n_proposals: 200
+# random, repeat, or balance
+forward_proposal_manager: 
+  pad: repeat
+# backtracking, box_renewal
+reverse_proposal_manager: 
+  renewal: box_renewal
+
+chain_steps: 1000
+
+noise_variance_schedule:
+  noise_variance_scheduler: linear_scheduler
+  noise_variance_schedule_setup:
+    schedule_range:
+    - 1.0E-4
+    - 0.02
+
+diffusion_head:
+
+  # the core hidden size along the 
+  # whole model
+  d_model:    &d_model 128    # d_model
+  d_model_2:  &d_model_2 256  # d_model x 2
+  d_model_4:  &d_model_4 512  # d_model x 4
+
+  time_embedding:
+    out_features: *d_model
+
+  time_projection:
+    in_features: *d_model
+    hidden_features: *d_model_4
+    out_features: *d_model_2
+
+  text_projection:
+    in_features: 768 # output #features of the phrase-bert
+    out_features: *d_model_2
+
+  rois: 
+    # in response to the extract_layers of backbone
+    # 
+    in_channels: 256
+    feature_layers: 
+    - '1'
+    - '2'
+    - '3'
+    - pool
+    pooler_type: MultiScaleRoIAlign
+    pooler_resolution: &roi_pooler_resolution 7
+    pooler_sampling_ratio: 2
+
+  box_projection:
+    hidden_features: *d_model_4
+    out_features: *d_model_2
+
+  head_model:
+    d_model: *d_model
+    prediction_type: noise
+    n_repeat: 2
+    
+    return_series_outputs: True
+
+    lgrcnn:
+      scale_shift_mapper:
+        # in_features here should be the 
+        # projected_time 
+        # + 
+        # projection_features of lgblock
+        # d_model_2 + d_model_2 = d_model_4
+        in_features: *d_model_4
+        out_features: *d_model_4
+
+      lgblock:
+        n_blocks: 1
+        input_visual_feature: *d_model_2
+        input_text_feature: *d_model_2
+        n_heads: 8
+        mapped_qkv_features: *d_model_2
+        projection_features: *d_model_2
+        attention_dropout: 0.0
+        projection_dropout: 0.0
+
+        ffn:
+          in_features: *d_model_2
+          out_features: *d_model_2
+          hidden_features: *d_model_4
+          dropout: 0.0
+          dropout_path: 0.2
+
+      num_groups: 8
+      group_out_features: *d_model_2
+
+      bbox_regression:
+        regression_layers: 1
+        in_features: *d_model_2
+        out_features: *d_model_2
+      
+      bbox_delta:
+        coord_weights: 
+          - 2.0
+          - 2.0
+          - 1.0
+          - 1.0
+        # set null to utilize the default value
+        # math.log(100000.0 / 16)
+        wh_scale_calmp: null
+      
+
+out_weights:
+  p2_weighting_gamma: 0.
+  p2_weighting_k: 1
+
+normalization:
+  # for bboxes-oriented diffusion model
+  # the normalization should perform
+  # on bboxes
+  auto_normalize: True
+  scale_value: 2.0
+
+
+reverse_sampling: 
+  schema: ddim
+  sampling_steps: 1
+  eta: 1.0
+

@@ -1,0 +1,31 @@
+
+
+data:
+  # the data type exchanged between the server and local machine.
+  # all: send all obtained data to local machine
+  # slurm_loggings: logging file produced by Slurm
+  # loggings: logging file produced by VGGbase
+  # models: models produced by VGGbase
+  # checkpoints: checkpoints produced by VGGbase
+  # results: results produced by VGGbase
+  type: all 
+
+server:
+  address: YourRemoteServerAddress
+  logging_dir: WhereSlurmLogginStored
+  vgb_data_dir: WhereToSaveVGGbaseOutputs
+  vgb_data_basename: experiments
+
+local:
+  logging_dir: WhereToSaveTheLoggingLocally
+  vgb_data_dir:  WhereToSaveVGGbaseOutputsLocally
+  data_basename: experiments
+
+run:
+  n_gpus: 1
+  research_dir: &research_dir RootDirWhereToPlaceGeneratedScripts
+  examples_dir: !join [*research_dir, examples] 
+  configs_dir: !join [*research_dir, examples, configs] 
+  script_out_dir: !join [*research_dir, examples, run_scripts]
+  slurm_logging_dir: !join [*research_dir, slurm_loggings] 
+  python_path: YoutPathPath

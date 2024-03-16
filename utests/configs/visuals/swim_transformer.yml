@@ -1,0 +1,9 @@
+name: swin_t
+dataset: imagenet-1k
+weights_version: V1
+trainable_layers: 0
+extract_layers:
+  - 1 # first stage '1'
+  - 2 # second stage '2'
+  - 3 # third stage '3'
+
